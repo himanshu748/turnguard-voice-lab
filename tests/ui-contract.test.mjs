@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import{readFileSync}from'node:fs';
+test('offline shell has semantic controls and CSP network denial',()=>{const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');assert.match(html,/connect-src 'none'/);for(const id of ['play','scrubber','scenario-select'])assert.ok(html.includes(`id="${id}"`));assert.match(html,/aria-live="polite"/);assert.doesNotMatch(html,/<(?:script|link|img)[^>]*(?:src|href)="https?:/);});
+test('styles explicitly support reduced motion and visible focus',()=>{const css=readFileSync(new URL('../src/styles.css',import.meta.url),'utf8');assert.match(css,/prefers-reduced-motion/);assert.match(css,/:focus-visible/);});

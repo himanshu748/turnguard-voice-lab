@@ -1,0 +1,7 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { scenarios, replay } from '../src/scenarios.mjs';
+test('every scenario has sorted events and deterministic replay',()=>{assert.equal(scenarios.length,7);for(const scenario of scenarios){assert.ok(scenario.events.every((e,i,a)=>i===0||e.at>=a[i-1].at));assert.deepEqual(replay(scenario,'safe',scenario.duration),replay(scenario,'safe',scenario.duration));}});
+test('interruption makes the safe/broken difference measurable',()=>{const scene=scenarios.find(s=>s.id==='interruption');const safe=replay(scene,'safe',scene.duration),broken=replay(scene,'broken',scene.duration);assert.equal(safe.stats.leakedMs,0);assert.ok(broken.stats.leakedMs>0);assert.equal(safe.contexts['turn-b'].status,'complete');assert.equal(safe.stats.dropped,2);});
+test('all safe scenarios end in expected lifecycle states',()=>{const expected={normal:'complete',interruption:'interrupted',multiplex:'complete',warning:'complete',fatal:'fatal',malformed:'complete',timeout:'timed-out'};for(const scene of scenarios){const s=replay(scene,'safe',scene.duration);assert.equal(s.contexts['turn-a'].status,expected[scene.id],scene.id);assert.equal(s.stats.leakedMs,0);}});
+test('seek clamps to the observation window and partial replay stops exactly',()=>{const scene=scenarios[0];assert.equal(replay(scene,'safe',-10).now,0);assert.equal(replay(scene,'safe',1e9).now,scene.duration);assert.equal(replay(scene,'safe',750).now,750);});
